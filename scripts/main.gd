@@ -128,6 +128,7 @@ func _generate_maze():
             maze[nxt.y][nxt.x] = false
             stack.append(nxt)
 
+    # Add loops: still maze-like, but ~20% less punishing than a perfect maze.
     var opened := 0
     var attempts := 0
     while opened < 18 and attempts < 500:
@@ -187,6 +188,7 @@ func _setup_environment():
     env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
     env.ambient_light_color = Color(0.055, 0.07, 0.095)
     env.ambient_light_energy = 0.42
+    # Forward+ high-end effects: deliberately not the Mobile/Compatibility renderer.
     env.fog_enabled = true
     env.fog_density = 0.010
     env.fog_light_color = Color(0.075, 0.095, 0.135)
@@ -227,6 +229,7 @@ func _setup_environment():
     add_child(world)
 
 func _build_level():
+    # floor
     var floor_mesh = MeshInstance3D.new()
     var pm = PlaneMesh.new()
     pm.size = Vector2(GRID * CELL, GRID * CELL)
@@ -247,6 +250,7 @@ func _build_level():
     floor_body.add_child(floor_col)
     add_child(floor_body)
 
+    # ceiling
     var ceil_mesh = MeshInstance3D.new()
     var cp = PlaneMesh.new()
     cp.size = Vector2(GRID * CELL, GRID * CELL)
@@ -267,6 +271,7 @@ func _build_level():
             elif ((x * 13 + y * 19) % 37) == 11:
                 _add_crate(Vector2i(x,y))
 
+    # distinctive signs and pipes: navigation landmarks + detail.
     var open_cells := []
     for y in range(2, GRID-2):
         for x in range(2, GRID-2):
@@ -443,15 +448,15 @@ func _make_exit():
     mi.name = "DoorMesh"
     exit_door.add_child(mi)
 
-    var static = StaticBody3D.new()
-    static.collision_layer = 1
+    var door_body = StaticBody3D.new()
+    door_body.collision_layer = 1
     exit_collision = CollisionShape3D.new()
     var sh = BoxShape3D.new()
     sh.size = b.size
     exit_collision.shape = sh
     exit_collision.position.y = 1.55
-    static.add_child(exit_collision)
-    exit_door.add_child(static)
+    door_body.add_child(exit_collision)
+    exit_door.add_child(door_body)
 
     var l = OmniLight3D.new()
     l.name = "DoorLight"
