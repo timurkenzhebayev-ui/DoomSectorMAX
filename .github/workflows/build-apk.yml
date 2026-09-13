@@ -1,4 +1,4 @@
-name: Build DOOM SECTOR MAX APK
+name: Build HOUSE ASSAULT v2 APK
 
 on:
   push:
@@ -34,13 +34,32 @@ jobs:
             "cmdline-tools;latest" \
             "cmake;3.10.2.4988404" \
             "ndk;23.2.8568313"
-          echo "--- Installed Android packages relevant to Godot 4.4 ---"
-          sdkmanager --list_installed | grep -E "platform-tools|build-tools;34.0.0|platforms;android-34|cmake;3.10.2.4988404|ndk;23.2.8568313" || true
 
-      - name: Generate game assets
+      - name: Generate local game assets
         run: |
           python -m pip install --quiet pillow
           python tools/generate_assets.py
+
+      - name: Fetch CC0 FPS assets
+        run: |
+          mkdir -p assets/models assets/textures assets/audio
+          BASE="https://raw.githubusercontent.com/petroulacl/fps-asset-kit/a19b7458a593598211c95ec46ef4eb4b6d1f94d7"
+          wget -q "$BASE/weapons/flat_guns_west/Flat%20Guns%20West/GLB/Pistol_Full_West.glb" -O assets/models/pistol.glb
+          wget -q "$BASE/textures/Plaster001/Plaster001_2K-JPG_Color.jpg" -O /tmp/plaster_color.jpg
+          wget -q "$BASE/textures/Plaster001/Plaster001_2K-JPG_NormalGL.jpg" -O /tmp/plaster_normal.jpg
+          wget -q "$BASE/textures/Plaster001/Plaster001_2K-JPG_Roughness.jpg" -O /tmp/plaster_rough.jpg
+          wget -q "$BASE/sfx/gunshots/game_gunshot.wav" -O assets/audio/shot.wav
+          python - <<'PY'
+          from PIL import Image
+          for src, dst in [
+              ('/tmp/plaster_color.jpg','assets/textures/plaster_color.jpg'),
+              ('/tmp/plaster_normal.jpg','assets/textures/plaster_normal.jpg'),
+              ('/tmp/plaster_rough.jpg','assets/textures/plaster_rough.jpg')]:
+              im=Image.open(src).convert('RGB')
+              im=im.resize((1024,1024), Image.Resampling.LANCZOS)
+              im.save(dst, quality=88, optimize=True)
+          PY
+          ls -lh assets/models/pistol.glb assets/textures/plaster_*.jpg assets/audio/shot.wav
 
       - name: Download Godot 4.4.1 and templates
         run: |
@@ -52,7 +71,6 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.4.1.stable
           unzip -q Godot_v4.4.1-stable_export_templates.tpz -d /tmp/godot_templates
           cp /tmp/godot_templates/templates/* ~/.local/share/godot/export_templates/4.4.1.stable/
-          ls -lh ~/.local/share/godot/export_templates/4.4.1.stable/android_*.apk
 
       - name: Configure Godot Android export
         run: |
@@ -75,8 +93,6 @@ jobs:
           export/android/debug_keystore_pass = "android"
           export/android/shutdown_adb_on_exit = true
           EOF
-          echo "--- Godot Android settings ---"
-          cat ~/.config/godot/editor_settings-4.4.tres
 
       - name: Import and syntax-check project
         run: |
@@ -89,12 +105,12 @@ jobs:
           GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           mkdir -p build
-          ./godot --headless --verbose --path . --export-debug "Android" build/DoomSectorMAX.apk
+          ./godot --headless --verbose --path . --export-debug "Android" build/HouseAssault-v2.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: DoomSectorMAX-apk
-          path: build/DoomSectorMAX.apk
+          name: HouseAssault-v2-apk
+          path: build/HouseAssault-v2.apk
           if-no-files-found: error
           retention-days: 30
