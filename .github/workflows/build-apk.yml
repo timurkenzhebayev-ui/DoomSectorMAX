@@ -24,10 +24,18 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK packages
+      - name: Install exact Godot 4.4 Android SDK packages
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.1"
+          sdkmanager \
+            "platform-tools" \
+            "build-tools;34.0.0" \
+            "platforms;android-34" \
+            "cmdline-tools;latest" \
+            "cmake;3.10.2.4988404" \
+            "ndk;23.2.8568313"
+          echo "--- Installed Android packages relevant to Godot 4.4 ---"
+          sdkmanager --list_installed | grep -E "platform-tools|build-tools;34.0.0|platforms;android-34|cmake;3.10.2.4988404|ndk;23.2.8568313" || true
 
       - name: Generate game assets
         run: |
@@ -44,7 +52,7 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.4.1.stable
           unzip -q Godot_v4.4.1-stable_export_templates.tpz -d /tmp/godot_templates
           cp /tmp/godot_templates/templates/* ~/.local/share/godot/export_templates/4.4.1.stable/
-          ls -lh ~/.local/share/godot/export_templates/4.4.1.stable/
+          ls -lh ~/.local/share/godot/export_templates/4.4.1.stable/android_*.apk
 
       - name: Configure Godot Android export
         run: |
