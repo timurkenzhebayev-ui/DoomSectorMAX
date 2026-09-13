@@ -44,6 +44,7 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.4.1.stable
           unzip -q Godot_v4.4.1-stable_export_templates.tpz -d /tmp/godot_templates
           cp /tmp/godot_templates/templates/* ~/.local/share/godot/export_templates/4.4.1.stable/
+          ls -lh ~/.local/share/godot/export_templates/4.4.1.stable/
 
       - name: Configure Godot Android export
         run: |
@@ -72,9 +73,13 @@ jobs:
           ./godot --headless --editor --path . --import --quit
 
       - name: Export Android debug APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           mkdir -p build
-          ./godot --headless --path . --export-debug "Android" build/DoomSectorMAX.apk
+          ./godot --headless --verbose --path . --export-debug "Android" build/DoomSectorMAX.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
